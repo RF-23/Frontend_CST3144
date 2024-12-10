@@ -400,6 +400,11 @@
             this.showProducts();
           }
         },
+        watch: {
+          searchQuery() {
+            this.filteredProducts(); // Every keystroke will trigger the computed property of displaying the results dynamically
+          },
+        },
         methods: {
           showProducts() {
             this.showProduct = true;
@@ -495,11 +500,13 @@
           filteredProducts() {
             return this.sortedProducts.filter((product) => {
               const query = this.searchQuery.toLowerCase();
+              const spacesAvailable =
+                product.availableInventory - this.cartCount(product.id);
               return (
                 product.title.toLowerCase().includes(query) || // || = or
                 product.price.toString().includes(query) || // Convert price to string to allow text-based matching since price stored as string
                 product.location.toLowerCase().includes(query) ||
-                product.availableInventory.toString().includes(query)
+                spacesAvailable.toString().includes(query)
               );
             });
           },
