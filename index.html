@@ -16,14 +16,14 @@
   <body>
     <div id="app">
       <header>
-        <h1 v-text="sitename"></h1>
+        <h1 v-text="sitename" v-on:click="showProducts"></h1>
         <input
           type="text"
           v-model="searchQuery"
           placeholder="Search products..."
           class="search-input"
         />
-        <button v-on:click="showCheckout">
+        <button v-on:click="showCheckout" :disabled="cart.length === 0">
           {{cartItemCount}}
           <span class="fa-solid fa-cart-shopping"></span>
           Checkout
@@ -82,28 +82,32 @@
             <p>Your cart is empty.</p>
           </div>
           <p>
-            <strong>First Name:</strong>
+            <strong>Full Name:</strong>
             <input v-model.trim="order.firstName" />
           </p>
           <p>
-            <strong>Last Name:</strong>
-            <input v-model="order.lastName" />
+            <strong>Phone Number:</strong>
+            <input v-model.trim="order.phone" type="tel" 
+            pattern="[0-9]*" 
+            placeholder="Enter only numbers" 
+            @input="order.phone = order.phone.replace(/[^0-9]/g, '')"
+          />
           </p>
           <p>
-            <strong>Address:</strong>
-            <input v-model="order.address" />
+            <strong>Country:</strong>
+            <select v-model="order.country" class="form-control">
+              <option v-for="country in countries" v-bind:value="country">
+                {{country}}
+              </option>
+            </select>
           </p>
           <p>
             <strong>City:</strong>
             <input v-model="order.city" />
           </p>
           <p>
-            <strong>State:</strong>
-            <select v-model="order.state" class="form-control">
-              <option v-for="(state, key) in states" v-bind:value="state">
-                {{key}}
-              </option>
-            </select>
+            <strong>Address:</strong>
+            <input v-model="order.address" />
           </p>
           <p>
             <strong>Zip/Postal Code:</strong>
@@ -120,26 +124,14 @@
             />
             <label for="gift">Ship As Gift?</label>
           </p>
-          <p>
-            <input type="radio" id="home" value="Home" v-model="order.method" />
-            <label for="home">Home</label>
-            <input
-              type="radio"
-              id="business"
-              value="Business"
-              v-model="order.method"
-            />
-            <label for="business">Business</label>
-          </p>
           <h2>Order Information</h2>
-          <p>First Name: {{order.firstName}}</p>
-          <p>Last Name: {{order.lastName}}</p>
-          <p>Address: {{order.address}}</p>
+          <p>Full Name: {{order.fullName}}</p>
+          <p>Contact Number: {{order.phone}}</p>
+          <p>Country: {{order.country}}</p>
           <p>City: {{order.city}}</p>
-          <p>State: {{order.state}}</p>
-          <p>Zip: {{order.zip}}</p>
+          <p>Address: {{order.address}}</p>
+          <p>Zip/Postal Code: {{order.zip}}</p>
           <p>Ship as gift: {{order.gift}}</p>
-          <p>Method: {{order.method}}</p>
           <button v-on:click="submitForm">Place Order</button>
         </div>
       </main>
@@ -153,25 +145,217 @@
           products: products,
           cart: [],
           order: {
-            firstName: "",
-            lastName: "",
+            fullName: "",
+            phone: "",
             address: "",
             city: "",
             zip: "",
-            state: "",
-            method: "Home",
             gift: false,
             dontSendGift: "Do not send as a gift",
             sendGift: "Send as a gift",
           },
-          states: {
-            AL: "Alabama",
-            AR: "Arizona",
-            CA: "California",
-            NV: "Nevada",
-          },
+          countries: [
+            "Afghanistan",
+            "Albania",
+            "Algeria",
+            "Andorra",
+            "Angola",
+            "Antigua and Barbuda",
+            "Argentina",
+            "Armenia",
+            "Australia",
+            "Austria",
+            "Azerbaijan",
+            "Bahamas",
+            "Bahrain",
+            "Bangladesh",
+            "Barbados",
+            "Belarus",
+            "Belgium",
+            "Belize",
+            "Benin",
+            "Bhutan",
+            "Bolivia",
+            "Bosnia and Herzegovina",
+            "Botswana",
+            "Brazil",
+            "Brunei",
+            "Bulgaria",
+            "Burkina Faso",
+            "Burundi",
+            "Cabo Verde",
+            "Cambodia",
+            "Cameroon",
+            "Canada",
+            "Central African Republic",
+            "Chad",
+            "Chile",
+            "China",
+            "Colombia",
+            "Comoros",
+            "Congo",
+            "Costa Rica",
+            "Croatia",
+            "Cuba",
+            "Cyprus",
+            "Czech Republic",
+            "Democratic Republic of the Congo",
+            "Denmark",
+            "Djibouti",
+            "Dominica",
+            "Dominican Republic",
+            "Ecuador",
+            "Egypt",
+            "El Salvador",
+            "Equatorial Guinea",
+            "Eritrea",
+            "Estonia",
+            "Eswatini",
+            "Ethiopia",
+            "Fiji",
+            "Finland",
+            "France",
+            "Gabon",
+            "Gambia",
+            "Georgia",
+            "Germany",
+            "Ghana",
+            "Greece",
+            "Grenada",
+            "Guatemala",
+            "Guinea",
+            "Guinea-Bissau",
+            "Guyana",
+            "Haiti",
+            "Honduras",
+            "Hungary",
+            "Iceland",
+            "India",
+            "Indonesia",
+            "Iran",
+            "Iraq",
+            "Ireland",
+            "Israel",
+            "Italy",
+            "Jamaica",
+            "Japan",
+            "Jordan",
+            "Kazakhstan",
+            "Kenya",
+            "Kiribati",
+            "Korea, North",
+            "Korea, South",
+            "Kuwait",
+            "Kyrgyzstan",
+            "Laos",
+            "Latvia",
+            "Lebanon",
+            "Lesotho",
+            "Liberia",
+            "Libya",
+            "Liechtenstein",
+            "Lithuania",
+            "Luxembourg",
+            "Madagascar",
+            "Malawi",
+            "Malaysia",
+            "Maldives",
+            "Mali",
+            "Malta",
+            "Marshall Islands",
+            "Mauritania",
+            "Mauritius",
+            "Mexico",
+            "Micronesia",
+            "Moldova",
+            "Monaco",
+            "Mongolia",
+            "Montenegro",
+            "Morocco",
+            "Mozambique",
+            "Myanmar",
+            "Namibia",
+            "Nauru",
+            "Nepal",
+            "Netherlands",
+            "New Zealand",
+            "Nicaragua",
+            "Niger",
+            "Nigeria",
+            "North Macedonia",
+            "Norway",
+            "Oman",
+            "Pakistan",
+            "Palau",
+            "Palestine",
+            "Panama",
+            "Papua New Guinea",
+            "Paraguay",
+            "Peru",
+            "Philippines",
+            "Poland",
+            "Portugal",
+            "Qatar",
+            "Romania",
+            "Russia",
+            "Rwanda",
+            "Saint Kitts and Nevis",
+            "Saint Lucia",
+            "Saint Vincent and the Grenadines",
+            "Samoa",
+            "San Marino",
+            "Sao Tome and Principe",
+            "Saudi Arabia",
+            "Senegal",
+            "Serbia",
+            "Seychelles",
+            "Sierra Leone",
+            "Singapore",
+            "Slovakia",
+            "Slovenia",
+            "Solomon Islands",
+            "Somalia",
+            "South Africa",
+            "South Sudan",
+            "Spain",
+            "Sri Lanka",
+            "Sudan",
+            "Suriname",
+            "Sweden",
+            "Switzerland",
+            "Syria",
+            "Taiwan",
+            "Tajikistan",
+            "Tanzania",
+            "Thailand",
+            "Timor-Leste",
+            "Togo",
+            "Tonga",
+            "Trinidad and Tobago",
+            "Tunisia",
+            "Turkey",
+            "Turkmenistan",
+            "Tuvalu",
+            "Uganda",
+            "Ukraine",
+            "United Arab Emirates",
+            "United Kingdom",
+            "United States",
+            "Uruguay",
+            "Uzbekistan",
+            "Vanuatu",
+            "Vatican City",
+            "Venezuela",
+            "Vietnam",
+            "Yemen",
+            "Zambia",
+            "Zimbabwe",
+          ],
         },
         methods: {
+          showProducts() {
+            this.showProduct = true;
+          },
           addToCart(product) {
             this.cart.push(product.id);
           },
