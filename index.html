@@ -74,6 +74,7 @@
                 <span>{{ getProductTitle(productId) }}</span>
                 - Price: {{ getProductPrice(productId) }} - Quantity: {{
                 cartCount(productId) }}
+                <button v-on:click="removeFromCart(productId)">Remove</button>
               </li>
             </ul>
           </div>
@@ -176,6 +177,12 @@
           },
           canAddToCart(product) {
             return product.availableInventory > this.cartCount(product.id);
+          },
+          removeFromCart(productId) {
+            const index = this.cart.lastIndexOf(productId); // Find the last occurrence of the productId
+            if (index > -1) {
+              this.cart.splice(index, 1); // Remove one occurrence of the productId
+            }
           },
           submitForm() {
             {
