@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:," />
+    <title>AfterSchool Activities</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+    <script src="products.js"></script>
+    <link rel="stylesheet" href="style.css" />
+    <script
+      src="https://kit.fontawesome.com/e712731f30.js"
+      crossorigin="anonymous"
+    ></script>
+    <!-- sorting done by price desc 
+    GitHub with minimum 15 commits
+Sorting button
+Show the products selected in the cart
+Search functionality
+Add to cart button shouldn’t appear initially only when added to cart
+Place order disable
+Remove functionality count should work 
+    -->
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1 v-text="sitename"></h1>
+        <input
+          type="text"
+          v-model="searchQuery"
+          placeholder="Search products..."
+          class="search-input"
+        />
+        <button v-on:click="showCheckout">
+          {{cartItemCount}}
+          <span class="fa-solid fa-cart-shopping"></span>
+          Checkout
+        </button>
+      </header>
+      <main>
+        <div class="product-grid" v-if="showProduct">
+          <div id="individual-product" v-for="product in sortedProducts">
+            <figure>
+              <img v-bind:src="product.image" alt="" />
+            </figure>
+            <h2 v-text="product.title"></h2>
+            <p v-text="product.description"></p>
+            <p>Price: {{product.price}}</p>
+            <p>
+              Available Inventory: {{product.availableInventory -
+              cartCount(product.id)}}
+            </p>
+            <button
+              v-on:click="addToCart(product)"
+              v-if="canAddToCart(product)"
+            >
+              Add to Cart
+            </button>
+            <button disabled="disabled" v-else>Add to cart</button>
+            <span v-if="product.availableInventory === cartCount(product.id)">
+              All out!</span
+            >
+            <span
+              v-else-if="product.availableInventory - cartCount(product.id) < 5"
+            >
+              Only {{product.availableInventory - cartCount(product.id)}} left!
+            </span>
+            <span v-else> Buy Now!</span>
+            <div id="rating">
+              <span v-for="n in product.rating">★</span>
+              <span v-for="n in 5-product.rating">☆</span>
+            </div>
+          </div>
+        </div>
+        <div v-else>
+          <h2>CHECKOUT PAGE</h2>
+          <p>
+            <strong>First Name:</strong>
+            <input v-model.trim="order.firstName" />
+          </p>
+          <p>
+            <strong>Last Name:</strong>
+            <input v-model="order.lastName" />
+          </p>
+          <p>
+            <strong>Address:</strong>
+            <input v-model="order.address" />
+          </p>
+          <p>
+            <strong>City:</strong>
+            <input v-model="order.city" />
+          </p>
+          <p>
+            <strong>State:</strong>
+            <select v-model="order.state" class="form-control">
+              <option v-for="(state, key) in states" v-bind:value="state">
+                {{key}}
+              </option>
+            </select>
+          </p>
+          <p>
+            <strong>Zip/Postal Code:</strong>
+            <input v-model.number="order.zip" type="number" />
+          </p>
+          <p>
+            <input
+              type="checkbox"
+              id="Gift"
+              value="true"
+              v-model="order.gift"
+              v-bind:true-value="order.sendGift"
+              v-bind:false-value="order.dontSendGift"
+            />
+            <label for="gift">Ship As Gift?</label>
+          </p>
+          <p>
+            <input type="radio" id="home" value="Home" v-model="order.method" />
+            <label for="home">Home</label>
+            <input
+              type="radio"
+              id="business"
+              value="Business"
+              v-model="order.method"
+            />
+            <label for="business">Business</label>
+          </p>
+          <h2>Order Information</h2>
+          <p>First Name: {{order.firstName}}</p>
+          <p>Last Name: {{order.lastName}}</p>
+          <p>Address: {{order.address}}</p>
+          <p>City: {{order.city}}</p>
+          <p>State: {{order.state}}</p>
+          <p>Zip: {{order.zip}}</p>
+          <p>Ship as gift: {{order.gift}}</p>
+          <p>Method: {{order.method}}</p>
+          <button v-on:click="submitForm">Place Order</button>
+        </div>
+      </main>
+    </div>
+    <script>
+      var webstore = new Vue({
+        el: "#app",
+        data: {
+          sitename: "AfterSchool Activities",
+          showProduct: true,
+          products: products,
+          cart: [],
+          order: {
+            firstName: "",
+            lastName: "",
+            address: "",
+            city: "",
+            zip: "",
+            state: "",
+            method: "Home",
+            gift: false,
+            dontSendGift: "Do not send as a gift",
+            sendGift: "Send as a gift",
+          },
+          states: {
+            AL: "Alabama",
+            AR: "Arizona",
+            CA: "California",
+            NV: "Nevada",
+          },
+        },
+        methods: {
+          addToCart(product) {
+            this.cart.push(product.id);
+          },
+          canAddToCart(product) {
+            return product.availableInventory > this.cartCount(product.id);
+          },
+          submitForm() {
+            {
+              alert("Order submitted");
+            }
+          },
+          cartCount(id) {
+            let count = 0;
+            for (let i = 0; i < this.cart.length; i++) {
+              if (this.cart[i] === id) {
+                count++;
+              }
+            }
+            return count;
+          },
+          showCheckout() {
+            this.showProduct = this.showProduct ? false : true;
+          },
+        },
+        computed: {
+          cartItemCount: function () {
+            return this.cart.length;
+          },
+          sortedProducts() {
+            function compare(a, b) {
+              if (a.price > b.price) return -1;
+              if (a.price < b.price) return 1;
+              return 0;
+            }
+            return this.products.sort(compare);
+          },
+        },
+      });
+    </script>
+  </body>
+</html>
