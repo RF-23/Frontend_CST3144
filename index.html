@@ -17,12 +17,14 @@
     <div id="app">
       <header>
         <h1 v-text="sitename" v-on:click="showProducts"></h1>
-        <input
-          type="text"
-          v-model="searchQuery"
-          placeholder="Search products..."
-          class="search-input"
-        />
+        <div v-if="showProduct">
+          <input
+            type="text"
+            v-model="searchQuery"
+            placeholder="Search products..."
+            class="search-input"
+          />
+        </div>
         <button v-on:click="showCheckout" :disabled="cart.length === 0">
           {{cartItemCount}}
           <span class="fa-solid fa-cart-shopping"></span>
@@ -31,11 +33,17 @@
       </header>
       <main>
         <!-- <div>sort by price, title, rating in asc and desc order</div> -->
-        <div>
+        <div v-if="showProduct">
           <label>Sort by:</label>
           <select v-model="sortBy" @change="sortProducts">
             <option value="priceAsc">Price (Low to High)</option>
             <option value="priceDesc">Price (High to Low)</option>
+            <option value="spacesAsc">Spaces Availability (Low to High)</option>
+            <option value="spacesDesc">
+              Spaces Availability (High to Low)
+            </option>
+            <option value="locationAsc">Location (Low to High)</option>
+            <option value="locationDesc">Location (High to Low)</option>
             <option value="titleAsc">Title (A-Z)</option>
             <option value="titleDesc">Title (Z-A)</option>
             <option value="ratingAsc">Rating (Low to High)</option>
@@ -80,23 +88,29 @@
         <div v-else>
           <h2>CHECKOUT PAGE</h2>
           <!-- Cart Items Summary -->
-          <!-- location add and in sort and search too enable functionality, 
-            refresh  -->
-          <h3>Your Cart:</h3>
-          <div v-if="cart.length > 0">
-            <ul>
-              <li v-for="productId in uniqueCartItems">
-                <span>{{ getProductTitle(productId) }}</span>
-                <img :src="getProductImage(productId)" id="product_img" alt="Product Image" />
-                - Price: {{ getProductPrice(productId) }} - Quantity: {{
-                cartCount(productId) }}
+          <!-- <h3>Your Cart:</h3> -->
+          <div id="cart_summary" v-if="cart.length > 0">
+            <h3>Your Cart:</h3>
+            <ul class="cart-item-list">
+              <li v-for="productId in uniqueCartItems" class="cart-item">
+                <img :src="getProductImage(productId)" alt="Product Image" />
+                <div class="cart-item-info">
+                  <span class="cart-item-title"
+                    >{{ getProductTitle(productId) }}</span
+                  ><br />
+                  <span class="cart-item-price"
+                    >Price: {{ getProductPrice(productId) }}</span
+                  ><br />
+                  <span class="cart-item-quantity"
+                    >Quantity: {{ cartCount(productId) }}</span
+                  >
+                </div>
                 <button v-on:click="removeFromCart(productId)">Remove</button>
+                <!-- <button v-on:click="addToCart(productId)">Add</button> -->
               </li>
             </ul>
           </div>
-          <div v-else v-on:click="productsPage()">
-            <p>Your cart is empty.</p>
-          </div>
+          <div v-else v-on:click="productsPage()"></div>
           <p>
             <strong>Full Name:</strong>
             <input
@@ -443,31 +457,27 @@
           cartItemCount: function () {
             return this.cart.length;
           },
+
           sortedProducts() {
-            // function compare(a, b) {
-            //   if (a.price > b.price) return -1;
-            //   if (a.price < b.price) return 1;
-            //   return 0;
-            // }
-            // return this.products.sort(compare);
-            return [...this.products].sort((a, b) => {
-              switch (this.sortBy) {
-                case "priceAsc":
-                  return a.price - b.price;
-                case "priceDesc":
-                  return b.price - a.price;
-                case "titleAsc":
-                  return a.title.localeCompare(b.title);
-                case "titleDesc":
-                  return b.title.localeCompare(a.title);
-                case "ratingAsc":
-                  return a.rating - b.rating;
-                case "ratingDesc":
-                  return b.rating - a.rating;
-                default:
-                  return 0;
-              }
-            });
+            const spacesAvailable = (product) =>
+              product.availableInventory - this.cartCount(product.id);
+            //Removed switch since below codes works perfectly and redundant sata is reduced
+            const sortingFunctions = {
+              priceAsc: (a, b) => a.price - b.price,
+              priceDesc: (a, b) => b.price - a.price,
+              spacesAsc: (a, b) => spacesAvailable(a) - spacesAvailable(b),
+              spacesDesc: (a, b) => spacesAvailable(b) - spacesAvailable(a),
+              locationAsc: (a, b) => a.location.localeCompare(b.location),
+              locationDesc: (a, b) => b.location.localeCompare(a.location),
+              titleAsc: (a, b) => a.title.localeCompare(b.title),
+              titleDesc: (a, b) => b.title.localeCompare(a.title),
+              ratingAsc: (a, b) => a.rating - b.rating,
+              ratingDesc: (a, b) => b.rating - a.rating,
+            };
+
+            return [...this.products].sort(
+              sortingFunctions[this.sortBy] || (() => 0)
+            );
           },
           uniqueCartItems() {
             return [...new Set(this.cart)]; //Set object removes all duplicate values so if a product is selected twice it won't appear twice with all the deets just one line with quantity set as 2
@@ -488,7 +498,8 @@
               return (
                 product.title.toLowerCase().includes(query) || // || = or
                 product.price.toString().includes(query) || // Convert price to string to allow text-based matching since price stored as string
-                product.location.toLowerCase().includes(query)
+                product.location.toLowerCase().includes(query) ||
+                product.availableInventory.toString().includes(query)
               );
             });
           },
