@@ -16,11 +16,12 @@ header {
     width: 99.2%;
     top: 0;
     z-index: 1000;
+    display: flex;
 }
 
 header h1 {
     margin: 0;
-    margin-left: -55%;
+    margin-left: 5%;
     font-size: 2.5em;
     cursor: pointer;
 }
@@ -29,10 +30,10 @@ header input.search-input {
     padding: 5px;
     border-radius: 5px;
     background-color: #f9c85f;
-    margin-top: -45%;
     border: 2px solid #e2b35c;
     font-size: 1em;
-    transform: translate(0,5%,245%);
+    margin-top: 7%;
+    margin-inline-start: 313%;
 }
 
 header button {
@@ -43,8 +44,8 @@ header button {
 
 main {
     max-width: 1200px;
-    margin-top: -6%;
-    margin-left: 5%;
+    margin-top: -5%;
+    margin-left: 8%;
     padding: 100px 20px 20px;
 }
 .product-grid {
@@ -80,6 +81,10 @@ main {
     /* text-align: center; */
 }
 
+.product_img{
+    background-color: #333;
+
+}
 img {
     height: 200px;
     width: 107%;
@@ -120,10 +125,10 @@ button:hover {
 }
 
 button[disabled] {
-    background-color: #215070;
+    background-color: #d2bd68;
     cursor: not-allowed;
     color: #777b7d;
-    border-color: #605a5a;
+    border-color: #3e3a3a;
 }
 
 button.add-to-cart {
@@ -135,12 +140,65 @@ button.add-to-cart {
 #rating{
     margin-left: 5%;
 }
-/* footer {
-    text-align: center;
-    padding: 10px 0;
-    background-color: #34495e;
-    color: white;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-} */
+
+#cart_summary{
+    margin-left: 5%;
+}
+
+.cart-item-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.cart-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    border-bottom: 1.4px solid #231b1b;
+}
+
+.cart-item:last-child {
+    border-bottom: none;
+}
+
+.cart-item img {
+    height: 100px;
+    width: 160px;
+    border-radius: 8px;
+    border: 1.5px solid #ab9951;
+    margin-left: -1%;
+    margin-right: 25px;
+}
+
+.cart-item-info {
+    flex-grow: 1;
+}
+
+.cart-item-title {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #333;
+}
+
+.cart-item-price,
+.cart-item-quantity {
+    font-size: 1em;
+    color: #555;
+}
+
+.cart-item button {
+    background-color: #f3d552;
+    border: 1.7px solid #c7a21b;
+    color: black;
+    padding: 5px 10px;
+    font-size: 1em;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+    margin-right: 160%;
+}
+
+.cart-item button:hover {
+    background-color: #dfa12c;
+}
