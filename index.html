@@ -3,18 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Title of the webpage that appears in the browser tab -->
     <title>AfterSchool Activities</title>
     <link rel="icon" href="./images/Website_Logo.png" type="image/png" />
+    <!-- CDN link for Vue.js (no need to install Vue CLI) -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
     <link rel="stylesheet" href="style.css" />
+    <!-- FontAwesome kit for including icons from the FontAwesome library -->
     <script
       src="https://kit.fontawesome.com/e712731f30.js"
       crossorigin="anonymous"
     ></script>
   </head>
   <body>
+    <!-- Root element div -->
     <div id="app">
       <header>
+        <!-- Vue directives used here are v-text, v-on and v-if -->
+        <!-- v-text binds text context here it is AfterSchoolActivities -->
+        <!-- v-on  -->
         <h1 v-text="sitename" v-on:click="showLessons"></h1>
         <div v-if="showLesson">
           <input
@@ -31,6 +38,7 @@
         </button>
       </header>
       <main>
+        <!-- Sorting -->
         <div id="sort" v-if="showLesson">
           <label>Sort by:</label>
           <select v-model="sortBy.field">
@@ -40,15 +48,15 @@
             <option value="title">Title</option>
             <option value="rating">Rating</option>
           </select>
-
           <button @click="toggleSortOrder">
             Order: {{ sortBy.order === "asc" ? "Ascending" : "Descending" }}
           </button>
         </div>
+        <!-- Lesson Details -->
         <div class="lesson-grid" v-if="showLesson">
           <div
             id="individual-lesson"
-            v-for="lesson in filteredLessons"
+            v-for="lesson in sortedLessons"
             :key="lesson.id"
           >
             <figure>
@@ -66,17 +74,27 @@
               Add to Cart
             </button>
             <button disabled="disabled" v-else>Add to cart</button>
+            <!-- Available inventory messages -->
             <span v-if="lesson.availableInventory === cartCount(lesson.id)"
               >All out!</span
             >
+            <span
+              v-else-if="lesson.availableInventory - cartCount(lesson.id) < 5"
+            >
+              Only {{lesson.availableInventory - cartCount(lesson.id)}} left!
+            </span>
             <span v-else> Buy Now!</span>
+            <!-- Rating -->
             <div id="rating">
               <span v-for="n in lesson.rating">★</span>
               <span v-for="n in 5-lesson.rating">☆</span>
             </div>
           </div>
         </div>
+        <!-- Checkout and Order Confirmation Page -->
         <div v-else>
+          <!-- If user has placed the order -->
+          <!-- Header text changes to Order Confirmation -->
           <h2
             v-text="orderPlaced ? 'ORDER CONFIRMATION' : 'CHECKOUT PAGE'"
             v-on:click="showLessons"
@@ -84,20 +102,26 @@
           <!-- Cart Items Summary -->
           <div id="cart_summary" v-if="cart.length > 0">
             <h3 v-if="!orderPlaced">Your Cart:</h3>
+            <!-- Each lesson details in the cart -->
             <ul class="cart-item-list">
               <li v-for="lessonId in uniqueCartItems" class="cart-item">
+                <!-- Lesson Image -->
                 <img :src="getLessonImage(lessonId)" alt="Lesson Image" />
                 <div class="cart-item-info">
+                  <!-- Lesson Title -->
                   <span class="cart-item-title"
                     >{{ getLessonTitle(lessonId) }}</span
                   ><br />
+                  <!-- Lesson Price -->
                   <span class="cart-item-price"
                     >Price: {{ getLessonPrice(lessonId) }}</span
                   ><br />
+                  <!-- Lesson Quantity -->
                   <span class="cart-item-quantity"
                     >Quantity: {{ cartCount(lessonId) }}</span
                   >
                 </div>
+                <!-- From front-end remove product via the button -->
                 <button
                   v-on:click="removeFromCart(lessonId)"
                   v-if="!orderPlaced"
@@ -108,7 +132,9 @@
             </ul>
           </div>
           <div v-else v-on:click="lessonsPage()"></div>
+          <!-- Order Form -->
           <div id="order_form" v-if="showOrderForm">
+            <!-- Name -->
             <p>
               <strong>Full Name:</strong>
               <input
@@ -117,6 +143,7 @@
                 type="text"
               />
             </p>
+            <!-- Phone Number -->
             <p>
               <strong>Phone Number:</strong>
               <input
@@ -126,6 +153,7 @@
                 @input="order.phone = order.phone.replace(/[^0-9]/g, '')"
               />
             </p>
+            <!-- Country Dropdown -->
             <p>
               <strong>Country:</strong>
               <select v-model="order.country" class="form-control">
@@ -134,6 +162,7 @@
                 </option>
               </select>
             </p>
+            <!-- City -->
             <p>
               <strong>City:</strong>
               <input
@@ -142,19 +171,23 @@
                 @input="order.city = order.city.replace(/[^a-zA-Z\s]/g, '')"
               />
             </p>
+            <!-- Address -->
             <p>
               <strong>Address:</strong>
               <input v-model="order.address" />
             </p>
+            <!-- Zip/Postal Code -->
             <p>
               <strong>Zip/Postal Code:</strong>
               <input v-model.number="order.zip" type="number" />
             </p>
+            <!-- Place Order button enabled only once user has successfully filled the order form -->
             <button v-on:click="submitForm" :disabled="!FormComplete">
               Place Order
             </button>
           </div>
         </div>
+        <!-- Summary of Order Details which from the above div includes cart details-->
         <div v-if="showOrder">
           <p>Full Name: {{order.fullName}}</p>
           <p>Contact Number: {{order.phone}}</p>
@@ -178,7 +211,7 @@
           orders: [],
           debounceTimeout: null,
           filteredLessons: [],
-          sortBy: "price",
+          sortBy: { field: "price", order: "asc" },
           cart: [],
           cartItemsDetails: [],
           searchQuery: "",
@@ -468,6 +501,10 @@
               .then((response) => response.json())
               .then((lessons) => {
                 this.filteredLessons = lessons;
+                // Log message if no results are found
+                if (lessons.length === 0) {
+                  console.log(`No results found for "${query}"`);
+                }
               })
               .catch((error) => {
                 console.error("Error fetching lessons:", error);
@@ -578,6 +615,12 @@
             return this.cart.length;
           },
           sortedLessons() {
+            // const lessonsToSort = this.filteredLessons.length
+            //   ? this.filteredLessons
+            //   : this.lessons; // Fallback to all lessons if no search results
+            const lessonsToSort =
+              this.filteredLessons.length > 0 ? this.filteredLessons : []; // Show nothing if no search results
+
             const spacesAvailable = (lesson) =>
               lesson.availableInventory - this.cartCount(lesson.id);
 
@@ -590,10 +633,11 @@
             };
 
             const sortFn = sortingFunctions[this.sortBy.field];
-            const sorted = [...this.lessons].sort(sortFn);
+            const sorted = [...lessonsToSort].sort(sortFn);
 
             return this.sortBy.order === "asc" ? sorted : sorted.reverse();
           },
+
           uniqueCartItems() {
             return [...new Set(this.cart)]; //Set object removes all duplicate values so if a lesson is selected twice it won't appear twice with all the deets just one line with quantity set as 2
           },
