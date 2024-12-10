@@ -70,11 +70,11 @@
           <h3>Your Cart:</h3>
           <div v-if="cart.length > 0">
             <ul>
-              <li v-for="(productId, each_product) in cart" :key="each_product">
-                <span>{{ getProductTitle(productId) }}</span> 
-                - Price: {{ getProductPrice(productId) }} 
-                - Quantity: {{ cartCount(productId) }}
-              </li>I
+              <li v-for="productId in uniqueCartItems" :key="each_product">
+                <span>{{ getProductTitle(productId) }}</span>
+                - Price: {{ getProductPrice(productId) }} - Quantity: {{
+                cartCount(productId) }}
+              </li>
             </ul>
           </div>
           <div v-else>
@@ -194,18 +194,19 @@
           showCheckout() {
             this.showProduct = this.showProduct ? false : true;
           },
-          getProductTitle(productId){
-            const product = this.products.find(p => p.id === productId);
+          getProductTitle(productId) {
+            const product = this.products.find((p) => p.id === productId);
             return {
-              title: product ? product.title : 'Not a Product',
+              title: product ? product.title : "Not a Product",
             };
           },
-          getProductPrice(productId){
-            const product = this.products.find(p => p.id === productId);
+          getProductPrice(productId) {
+            const product = this.products.find((p) => p.id === productId);
             return {
-              title: product ? product.price : 'Not a Product',
+              title: product ? product.price : "Not a Product",
             };
-        }},
+          },
+        },
         computed: {
           cartItemCount: function () {
             return this.cart.length;
@@ -217,8 +218,10 @@
               return 0;
             }
             return this.products.sort(compare);
-         
-         },
+          },
+          uniqueCartItems() {
+            return [...new Set(this.cart)]; //Set object removes all duplicate values so if a product is selected twice it won't appear twice with all the deets just one line with quantity set as 2
+          },
         },
       });
     </script>
