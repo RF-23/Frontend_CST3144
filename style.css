@@ -145,9 +145,17 @@ button.add-to-cart {
     margin-left: 5%;
 }
 
+#order_form input, select {
+    all: unset;
+    border: 1.1px solid #9d893a;
+    border-radius: 4px;
+    font-size: 1em;
+    color: #555;
+}
+
 .cart-item-list {
     list-style-type: none;
-    padding: 0;
+    padding: 0; 
 }
 
 .cart-item {
@@ -202,3 +210,53 @@ button.add-to-cart {
 .cart-item button:hover {
     background-color: #dfa12c;
 }
+
+#sort {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Adds space between the label and select box */
+    padding: 10px;
+    background-color: #dfd48e;
+    border: 1.7px solid #d3ae5e;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 16px; /* Adds space below the sort section */
+  }
+  
+  #sort label {
+    font-size: 16px;
+    color: #333;
+    font-weight: bold;
+  }
+  
+  #sort select {
+    padding: 8px;
+    font-size: 16px;
+    color: #333;
+    border: 1px solid #d3ae5e;
+    border-radius: 4px;
+    background-color: #d3ae5e;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.3s ease;
+  }
+  
+  #sort select option {
+    background-color: #d3ae5e;
+    color: #333;
+  }
+  
+  /* Try to override default highlight */
+  #sort select option:hover {
+    background-color: #dfd48e;
+    color: #333;
+  }
+  #sort select:hover {
+    border-color: #999; /* Slight color change on hover */
+  }
+  
+  #sort select:focus {
+    border-color: #d3ae5e; /* Highlight border on focus */
+    box-shadow: #d3ae5e; /* Subtle focus glow */
+  }
+  
