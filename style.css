@@ -1,3 +1,4 @@
+/* General Styling */
 body {
     font-family: 'Roboto', sans-serif;
     margin: 0;
@@ -48,14 +49,14 @@ main {
     margin-left: 8%;
     padding: 100px 20px 20px;
 }
-.product-grid {
+.lesson-grid {
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
     justify-content: space-between;
 }
 
-#individual-product {
+#individual-lesson {
     background-color: #dfd48e;
     border: 1.8px solid #d3ae5e;
     border-radius: 8px;
@@ -66,12 +67,12 @@ main {
 }
 
 @media screen and (max-width: 600px) {
-    #individual-product {
+    #individual-lesson {
         width: 100%; /* Adjust to full width on small screens */
     }
 }
 
-.product-card {
+.lesson-card {
     /* flex: 1 1 calc(33.33% - 20px); */
     background-color: #dbc954;
     /* border: 1.8px solid #000;
@@ -81,7 +82,7 @@ main {
     /* text-align: center; */
 }
 
-.product_img{
+.lesson_img{
     background-color: #333;
 
 }
