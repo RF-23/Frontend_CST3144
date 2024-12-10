@@ -3,10 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="data:," />
     <title>AfterSchool Activities</title>
+    <link rel="icon" href="./images/Website_Logo.png" type="image/png" />
     <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
-    <script src="products.js"></script>
     <link rel="stylesheet" href="style.css" />
     <script
       src="https://kit.fontawesome.com/e712731f30.js"
@@ -16,12 +15,12 @@
   <body>
     <div id="app">
       <header>
-        <h1 v-text="sitename" v-on:click="showProducts"></h1>
-        <div v-if="showProduct">
+        <h1 v-text="sitename" v-on:click="showLessons"></h1>
+        <div v-if="showLesson">
           <input
             type="text"
             v-model="searchQuery"
-            placeholder="Search products..."
+            placeholder="Search lessons..."
             class="search-input"
           />
         </div>
@@ -32,148 +31,142 @@
         </button>
       </header>
       <main>
-        <!-- <div>sort by price, title, rating in asc and desc order</div> -->
-        <div v-if="showProduct">
+        <div id="sort" v-if="showLesson">
           <label>Sort by:</label>
-          <select v-model="sortBy" @change="sortProducts">
-            <option value="priceAsc">Price (Low to High)</option>
-            <option value="priceDesc">Price (High to Low)</option>
-            <option value="spacesAsc">Spaces Availability (Low to High)</option>
-            <option value="spacesDesc">
-              Spaces Availability (High to Low)
-            </option>
-            <option value="locationAsc">Location (Low to High)</option>
-            <option value="locationDesc">Location (High to Low)</option>
-            <option value="titleAsc">Title (A-Z)</option>
-            <option value="titleDesc">Title (Z-A)</option>
-            <option value="ratingAsc">Rating (Low to High)</option>
-            <option value="ratingDesc">Rating (High to Low)</option>
+          <select v-model="sortBy.field">
+            <option value="price">Price</option>
+            <option value="spaces">Spaces Availability</option>
+            <option value="location">Location</option>
+            <option value="title">Title</option>
+            <option value="rating">Rating</option>
           </select>
+
+          <button @click="toggleSortOrder">
+            Order: {{ sortBy.order === "asc" ? "Ascending" : "Descending" }}
+          </button>
         </div>
-        <div class="product-grid" v-if="showProduct">
-          <div id="individual-product" v-for="product in filteredProducts">
+        <div class="lesson-grid" v-if="showLesson">
+          <div
+            id="individual-lesson"
+            v-for="lesson in filteredLessons"
+            :key="lesson.id"
+          >
             <figure>
-              <img v-bind:src="product.image" alt="" />
+              <img v-bind:src="lesson.image" alt="" />
             </figure>
-            <h2 v-text="product.title"></h2>
-            <p v-text="product.description"></p>
-            <p>Price: {{product.price}}</p>
-            <p>Location: {{product.location}}</p>
+            <h2 v-text="lesson.title"></h2>
+            <p v-text="lesson.description"></p>
+            <p>Price: {{lesson.price}}</p>
+            <p>Location: {{lesson.location}}</p>
             <p>
-              Available Inventory: {{product.availableInventory -
-              cartCount(product.id)}}
+              Available Inventory: {{lesson.availableInventory -
+              cartCount(lesson.id)}}
             </p>
-            <button
-              v-on:click="addToCart(product)"
-              v-if="canAddToCart(product)"
-            >
+            <button v-on:click="addToCart(lesson)" v-if="canAddToCart(lesson)">
               Add to Cart
             </button>
             <button disabled="disabled" v-else>Add to cart</button>
-            <span v-if="product.availableInventory === cartCount(product.id)">
-              All out!</span
+            <span v-if="lesson.availableInventory === cartCount(lesson.id)"
+              >All out!</span
             >
             <span
-              v-else-if="product.availableInventory - cartCount(product.id) < 5"
+              v-else-if="lesson.availableInventory - cartCount(lesson.id) < 5"
             >
-              Only {{product.availableInventory - cartCount(product.id)}} left!
+              Only {{lesson.availableInventory - cartCount(lesson.id)}} left!
             </span>
             <span v-else> Buy Now!</span>
             <div id="rating">
-              <span v-for="n in product.rating">★</span>
-              <span v-for="n in 5-product.rating">☆</span>
+              <span v-for="n in lesson.rating">★</span>
+              <span v-for="n in 5-lesson.rating">☆</span>
             </div>
           </div>
         </div>
         <div v-else>
-          <h2>CHECKOUT PAGE</h2>
+          <h2
+            v-text="orderPlaced ? 'ORDER CONFIRMATION' : 'CHECKOUT PAGE'"
+            v-on:click="showLessons"
+          ></h2>
           <!-- Cart Items Summary -->
-          <!-- <h3>Your Cart:</h3> -->
           <div id="cart_summary" v-if="cart.length > 0">
-            <h3>Your Cart:</h3>
+            <h3 v-if="!orderPlaced">Your Cart:</h3>
             <ul class="cart-item-list">
-              <li v-for="productId in uniqueCartItems" class="cart-item">
-                <img :src="getProductImage(productId)" alt="Product Image" />
+              <li v-for="lessonId in uniqueCartItems" class="cart-item">
+                <img :src="getLessonImage(lessonId)" alt="Lesson Image" />
                 <div class="cart-item-info">
                   <span class="cart-item-title"
-                    >{{ getProductTitle(productId) }}</span
+                    >{{ getLessonTitle(lessonId) }}</span
                   ><br />
                   <span class="cart-item-price"
-                    >Price: {{ getProductPrice(productId) }}</span
+                    >Price: {{ getLessonPrice(lessonId) }}</span
                   ><br />
                   <span class="cart-item-quantity"
-                    >Quantity: {{ cartCount(productId) }}</span
+                    >Quantity: {{ cartCount(lessonId) }}</span
                   >
                 </div>
-                <button v-on:click="removeFromCart(productId)">Remove</button>
-                <!-- <button v-on:click="addToCart(productId)">Add</button> -->
+                <button
+                  v-on:click="removeFromCart(lessonId)"
+                  v-if="!orderPlaced"
+                >
+                  Remove
+                </button>
               </li>
             </ul>
           </div>
-          <div v-else v-on:click="productsPage()"></div>
-          <p>
-            <strong>Full Name:</strong>
-            <input
-              v-model.trim="order.fullName"
-              @input="order.fullName = order.fullName.replace(/[^a-zA-Z\s]/g, '')"
-              type="text"
-            />
-          </p>
-          <p>
-            <strong>Phone Number:</strong>
-            <input
-              v-model.trim="order.phone"
-              type="tel"
-              pattern="[0-9]*"
-              @input="order.phone = order.phone.replace(/[^0-9]/g, '')"
-            />
-          </p>
-          <p>
-            <strong>Country:</strong>
-            <select v-model="order.country" class="form-control">
-              <option v-for="country in countries" v-bind:value="country">
-                {{country}}
-              </option>
-            </select>
-          </p>
-          <p>
-            <strong>City:</strong>
-            <input
-              v-model.trim="order.city"
-              type="text"
-              @input="order.city = order.city.replace(/[^a-zA-Z\s]/g, '')"
-            />
-          </p>
-          <p>
-            <strong>Address:</strong>
-            <input v-model="order.address" />
-          </p>
-          <p>
-            <strong>Zip/Postal Code:</strong>
-            <input v-model.number="order.zip" type="number" />
-          </p>
-          <p>
-            <input
-              type="checkbox"
-              id="Gift"
-              value="true"
-              v-model="order.gift"
-              v-bind:true-value="order.sendGift"
-              v-bind:false-value="order.dontSendGift"
-            />
-            <label for="gift">Ship As Gift?</label>
-          </p>
-          <h2>Order Information</h2>
+          <div v-else v-on:click="lessonsPage()"></div>
+          <div id="order_form" v-if="showOrderForm">
+            <p>
+              <strong>Full Name:</strong>
+              <input
+                v-model.trim="order.fullName"
+                @input="order.fullName = order.fullName.replace(/[^a-zA-Z\s]/g, '')"
+                type="text"
+              />
+            </p>
+            <p>
+              <strong>Phone Number:</strong>
+              <input
+                v-model.trim="order.phone"
+                type="tel"
+                pattern="[0-9]*"
+                @input="order.phone = order.phone.replace(/[^0-9]/g, '')"
+              />
+            </p>
+            <p>
+              <strong>Country:</strong>
+              <select v-model="order.country" class="form-control">
+                <option v-for="country in countries" v-bind:value="country">
+                  {{country}}
+                </option>
+              </select>
+            </p>
+            <p>
+              <strong>City:</strong>
+              <input
+                v-model.trim="order.city"
+                type="text"
+                @input="order.city = order.city.replace(/[^a-zA-Z\s]/g, '')"
+              />
+            </p>
+            <p>
+              <strong>Address:</strong>
+              <input v-model="order.address" />
+            </p>
+            <p>
+              <strong>Zip/Postal Code:</strong>
+              <input v-model.number="order.zip" type="number" />
+            </p>
+            <button v-on:click="submitForm" :disabled="!FormComplete">
+              Place Order
+            </button>
+          </div>
+        </div>
+        <div v-if="showOrder">
           <p>Full Name: {{order.fullName}}</p>
           <p>Contact Number: {{order.phone}}</p>
           <p>Country: {{order.country}}</p>
           <p>City: {{order.city}}</p>
           <p>Address: {{order.address}}</p>
           <p>Zip/Postal Code: {{order.zip}}</p>
-          <p>Ship as gift: {{order.gift}}</p>
-          <button v-on:click="submitForm" :disabled="!FormComplete">
-            Place Order
-          </button>
         </div>
       </main>
     </div>
@@ -182,10 +175,17 @@
         el: "#app",
         data: {
           sitename: "AfterSchool Activities",
-          showProduct: true,
-          products: products,
-          sortBy: "priceAsc",
+          showLesson: true,
+          showOrder: false,
+          showOrderForm: true,
+          orderPlaced: false,
+          lessons: [],
+          orders: [],
+          debounceTimeout: null,
+          filteredLessons: [],
+          sortBy: "price",
           cart: [],
+          cartItemsDetails: [],
           searchQuery: "",
           order: {
             fullName: "",
@@ -193,9 +193,6 @@
             address: "",
             city: "",
             zip: "",
-            gift: false,
-            dontSendGift: "Do not send as a gift",
-            sendGift: "Send as a gift",
           },
           countries: [
             "Afghanistan",
@@ -395,43 +392,166 @@
             "Zimbabwe",
           ],
         },
+        created() {
+          fetch("http://localhost:3000/AfterSchoolActivities/lessons", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then((responseJSON) => {
+              console.log("Response received:", responseJSON);
+              this.lessons = responseJSON;
+              this.filteredLessons = responseJSON;
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+            });
+        },
         mounted() {
           if (this.cartIsEmpty) {
-            this.showProducts();
+            this.showLessons();
           }
         },
         watch: {
-          searchQuery() {
-            this.filteredProducts(); // Every keystroke will trigger the computed property of displaying the results dynamically
+          searchQuery(newQuery) {
+            this.fetchFilteredLessons(newQuery);
           },
         },
         methods: {
-          showProducts() {
-            this.showProduct = true;
+          showLessons() {
+            this.showLesson = true;
           },
-          addToCart(product) {
-            this.cart.push(product.id);
+          addToCart(lesson) {
+            this.cart.push(lesson.id);
+            const existingLesson = this.cartItemsDetails.find(
+              (item) => item.id === lesson.id
+            );
+
+            if (existingLesson) {
+              existingLesson.quantity++;
+            } else {
+              this.cartItemsDetails.push({
+                id: lesson.id,
+                title: lesson.title,
+                price: lesson.price,
+                quantity: 1,
+                location: lesson.location,
+              });
+            }
           },
-          canAddToCart(product) {
-            return product.availableInventory > this.cartCount(product.id);
+          canAddToCart(lesson) {
+            return lesson.availableInventory > this.cartCount(lesson.id);
           },
-          removeFromCart(productId) {
-            const index = this.cart.lastIndexOf(productId);
+          removeFromCart(lessonId) {
+            const index = this.cart.lastIndexOf(lessonId);
             if (index > -1) {
               this.cart.splice(index, 1);
             }
             if (this.cart.length === 0) {
-              this.showProduct = true;
+              this.showLesson = true;
             }
           },
-          productsPage() {
-            this.showProduct = this.showProduct ? false : true;
+          toggleSortOrder() {
+            this.sortBy.order = this.sortBy.order === "asc" ? "desc" : "asc";
+          },
+          lessonsPage() {
+            this.showLesson = this.showLesson ? false : true;
+          },
+          fetchFilteredLessons(query) {
+            if (!query) {
+              this.filteredLessons = [];
+              return;
+            }
+            fetch(`/AfterSchoolActivities/search/${query}`)
+              .then((response) => response.json())
+              .then((lessons) => {
+                this.filteredLessons = lessons;
+              })
+              .catch((error) => {
+                console.error("Error fetching lessons:", error);
+                this.filteredLessons = [];
+              });
           },
           submitForm() {
             {
-              alert("Order submitted");
-              this.showProduct = this.showProduct ? false : true;
+              this.showLesson = false;
+              this.showOrder = true;
+              this.showOrderForm = false;
+              this.orderPlaced = true;
             }
+            const orderDetails = {
+              fullName: this.order.fullName,
+              phone: this.order.phone,
+              country: this.order.country,
+              city: this.order.city,
+              address: this.order.address,
+              zip: this.order.zip,
+              cartItems: this.cartItemsDetails,
+            };
+            fetch("http://localhost:3000/AfterSchoolActivities/orders", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(orderDetails),
+            })
+              .then((response) => {
+                if (!response.ok) {
+                  throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+              })
+              .then((responseJSON) => {
+                console.log("Order saved successfully:", responseJSON);
+                this.orderPlaced = true;
+                this.updateInventoryAfterOrder(this.cartItemsDetails);
+              })
+              .catch((error) => {
+                console.error("Error saving order:", error);
+              });
+          },
+          updateInventoryAfterOrder(cartItems) {
+            cartItems.forEach((item) => {
+              fetch(
+                `http://localhost:3000/AfterSchoolActivities/lessons/${item.id}`,
+                {
+                  method: "PUT",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    quantity: item.quantity,
+                  }),
+                }
+              )
+                .then((response) => {
+                  if (!response.ok) {
+                    throw new Error(
+                      `Failed to update inventory for lesson ${item.id}`
+                    );
+                  }
+                  return response.json();
+                })
+                .then((responseJSON) => {
+                  console.log(
+                    "Inventory updated for lesson:",
+                    item.id,
+                    "-",
+                    item.title,
+                    responseJSON
+                  );
+                })
+                .catch((error) => {
+                  console.error("Error updating inventory:", error);
+                });
+            });
           },
           cartCount(id) {
             let count = 0;
@@ -443,49 +563,44 @@
             return count;
           },
           showCheckout() {
-            this.showProduct = this.showProduct ? false : true;
+            this.showLesson = this.showLesson ? false : true;
           },
-          getProductTitle(productId) {
-            const product = this.products.find((p) => p.id === productId);
-            return product ? product.title : "Not a Product";
+          getLessonTitle(lessonId) {
+            const lesson = this.lessons.find((p) => p.id === lessonId);
+            return lesson ? lesson.title : "Not a Lesson";
           },
-          getProductPrice(productId) {
-            const product = this.products.find((p) => p.id === productId);
-            return product ? product.price : "Not a Product";
+          getLessonPrice(lessonId) {
+            const lesson = this.lessons.find((p) => p.id === lessonId);
+            return lesson ? lesson.price : "Not a Lesson";
           },
-          getProductImage(productId) {
-            const product = this.products.find((p) => p.id === productId);
-            return product ? product.image : "Product Image";
+          getLessonImage(lessonId) {
+            const lesson = this.lessons.find((p) => p.id === lessonId);
+            return lesson ? lesson.image : "Lesson Image";
           },
         },
         computed: {
           cartItemCount: function () {
             return this.cart.length;
           },
+          sortedLessons() {
+            const spacesAvailable = (lesson) =>
+              lesson.availableInventory - this.cartCount(lesson.id);
 
-          sortedProducts() {
-            const spacesAvailable = (product) =>
-              product.availableInventory - this.cartCount(product.id);
-            //Removed switch since below codes works perfectly and redundant sata is reduced
             const sortingFunctions = {
-              priceAsc: (a, b) => a.price - b.price,
-              priceDesc: (a, b) => b.price - a.price,
-              spacesAsc: (a, b) => spacesAvailable(a) - spacesAvailable(b),
-              spacesDesc: (a, b) => spacesAvailable(b) - spacesAvailable(a),
-              locationAsc: (a, b) => a.location.localeCompare(b.location),
-              locationDesc: (a, b) => b.location.localeCompare(a.location),
-              titleAsc: (a, b) => a.title.localeCompare(b.title),
-              titleDesc: (a, b) => b.title.localeCompare(a.title),
-              ratingAsc: (a, b) => a.rating - b.rating,
-              ratingDesc: (a, b) => b.rating - a.rating,
+              price: (a, b) => a.price - b.price,
+              spaces: (a, b) => spacesAvailable(a) - spacesAvailable(b),
+              location: (a, b) => a.location.localeCompare(b.location),
+              title: (a, b) => a.title.localeCompare(b.title),
+              rating: (a, b) => a.rating - b.rating,
             };
 
-            return [...this.products].sort(
-              sortingFunctions[this.sortBy] || (() => 0)
-            );
+            const sortFn = sortingFunctions[this.sortBy.field];
+            const sorted = [...this.lessons].sort(sortFn);
+
+            return this.sortBy.order === "asc" ? sorted : sorted.reverse();
           },
           uniqueCartItems() {
-            return [...new Set(this.cart)]; //Set object removes all duplicate values so if a product is selected twice it won't appear twice with all the deets just one line with quantity set as 2
+            return [...new Set(this.cart)]; //Set object removes all duplicate values so if a lesson is selected twice it won't appear twice with all the deets just one line with quantity set as 2
           },
           FormComplete() {
             return (
@@ -496,19 +611,6 @@
               this.order.zip !== "" &&
               this.order.country !== ""
             );
-          },
-          filteredProducts() {
-            return this.sortedProducts.filter((product) => {
-              const query = this.searchQuery.toLowerCase();
-              const spacesAvailable =
-                product.availableInventory - this.cartCount(product.id);
-              return (
-                product.title.toLowerCase().includes(query) || // || = or
-                product.price.toString().includes(query) || // Convert price to string to allow text-based matching since price stored as string
-                product.location.toLowerCase().includes(query) ||
-                spacesAvailable.toString().includes(query)
-              );
-            });
           },
         },
       });
