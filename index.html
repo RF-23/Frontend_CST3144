@@ -12,15 +12,6 @@
       src="https://kit.fontawesome.com/e712731f30.js"
       crossorigin="anonymous"
     ></script>
-    <!-- sorting done by price desc 
-    GitHub with minimum 15 commits
-Sorting button
-Show the products selected in the cart
-Search functionality
-Add to cart button shouldn’t appear initially only when added to cart
-Place order disable
-Remove functionality count should work 
-    -->
   </head>
   <body>
     <div id="app">
@@ -75,6 +66,20 @@ Remove functionality count should work
         </div>
         <div v-else>
           <h2>CHECKOUT PAGE</h2>
+          <!-- Cart Items Summary -->
+          <h3>Your Cart:</h3>
+          <div v-if="cart.length > 0">
+            <ul>
+              <li v-for="(productId, each_product) in cart" :key="each_product">
+                <span>{{ getProductTitle(productId) }}</span> 
+                - Price: {{ getProductPrice(productId) }} 
+                - Quantity: {{ cartCount(productId) }}
+              </li>I
+            </ul>
+          </div>
+          <div v-else>
+            <p>Your cart is empty.</p>
+          </div>
           <p>
             <strong>First Name:</strong>
             <input v-model.trim="order.firstName" />
@@ -189,7 +194,18 @@ Remove functionality count should work
           showCheckout() {
             this.showProduct = this.showProduct ? false : true;
           },
-        },
+          getProductTitle(productId){
+            const product = this.products.find(p => p.id === productId);
+            return {
+              title: product ? product.title : 'Not a Product',
+            };
+          },
+          getProductPrice(productId){
+            const product = this.products.find(p => p.id === productId);
+            return {
+              title: product ? product.price : 'Not a Product',
+            };
+        }},
         computed: {
           cartItemCount: function () {
             return this.cart.length;
@@ -201,7 +217,8 @@ Remove functionality count should work
               return 0;
             }
             return this.products.sort(compare);
-          },
+         
+         },
         },
       });
     </script>
