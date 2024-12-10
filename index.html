@@ -30,6 +30,18 @@
         </button>
       </header>
       <main>
+        <!-- <div>sort by price, title, rating in asc and desc order</div> -->
+        <div>
+          <label>Sort by:</label>
+          <select v-model="sortBy" @change="sortProducts">
+            <option value="priceAsc">Price (Low to High)</option>
+            <option value="priceDesc">Price (High to Low)</option>
+            <option value="titleAsc">Title (A-Z)</option>
+            <option value="titleDesc">Title (Z-A)</option>
+            <option value="ratingAsc">Rating (Low to High)</option>
+            <option value="ratingDesc">Rating (High to Low)</option>
+          </select>
+        </div>
         <div class="product-grid" v-if="showProduct">
           <div id="individual-product" v-for="product in filteredProducts">
             <figure>
@@ -38,6 +50,7 @@
             <h2 v-text="product.title"></h2>
             <p v-text="product.description"></p>
             <p>Price: {{product.price}}</p>
+            <p>Location: {{product.location}}</p>
             <p>
               Available Inventory: {{product.availableInventory -
               cartCount(product.id)}}
@@ -67,18 +80,21 @@
         <div v-else>
           <h2>CHECKOUT PAGE</h2>
           <!-- Cart Items Summary -->
+          <!-- location add and in sort and search too enable functionality, 
+            refresh  -->
           <h3>Your Cart:</h3>
           <div v-if="cart.length > 0">
             <ul>
               <li v-for="productId in uniqueCartItems">
                 <span>{{ getProductTitle(productId) }}</span>
+                <img :src="getProductImage(productId)" id="product_img" alt="Product Image" />
                 - Price: {{ getProductPrice(productId) }} - Quantity: {{
                 cartCount(productId) }}
                 <button v-on:click="removeFromCart(productId)">Remove</button>
               </li>
             </ul>
           </div>
-          <div v-else>
+          <div v-else v-on:click="productsPage()">
             <p>Your cart is empty.</p>
           </div>
           <p>
@@ -95,7 +111,6 @@
               v-model.trim="order.phone"
               type="tel"
               pattern="[0-9]*"
-              placeholder="Enter only numbers"
               @input="order.phone = order.phone.replace(/[^0-9]/g, '')"
             />
           </p>
@@ -155,6 +170,7 @@
           sitename: "AfterSchool Activities",
           showProduct: true,
           products: products,
+          sortBy: "priceAsc",
           cart: [],
           searchQuery: "",
           order: {
@@ -365,6 +381,11 @@
             "Zimbabwe",
           ],
         },
+        mounted() {
+          if (this.cartIsEmpty) {
+            this.showProducts();
+          }
+        },
         methods: {
           showProducts() {
             this.showProduct = true;
@@ -376,14 +397,21 @@
             return product.availableInventory > this.cartCount(product.id);
           },
           removeFromCart(productId) {
-            const index = this.cart.lastIndexOf(productId); // Find the last occurrence of the productId
+            const index = this.cart.lastIndexOf(productId);
             if (index > -1) {
-              this.cart.splice(index, 1); // Remove one occurrence of the productId
+              this.cart.splice(index, 1);
             }
+            if (this.cart.length === 0) {
+              this.showProduct = true;
+            }
+          },
+          productsPage() {
+            this.showProduct = this.showProduct ? false : true;
           },
           submitForm() {
             {
               alert("Order submitted");
+              this.showProduct = this.showProduct ? false : true;
             }
           },
           cartCount(id) {
@@ -406,18 +434,40 @@
             const product = this.products.find((p) => p.id === productId);
             return product ? product.price : "Not a Product";
           },
+          getProductImage(productId) {
+            const product = this.products.find((p) => p.id === productId);
+            return product ? product.image : "Product Image";
+          },
         },
         computed: {
           cartItemCount: function () {
             return this.cart.length;
           },
           sortedProducts() {
-            function compare(a, b) {
-              if (a.price > b.price) return -1;
-              if (a.price < b.price) return 1;
-              return 0;
-            }
-            return this.products.sort(compare);
+            // function compare(a, b) {
+            //   if (a.price > b.price) return -1;
+            //   if (a.price < b.price) return 1;
+            //   return 0;
+            // }
+            // return this.products.sort(compare);
+            return [...this.products].sort((a, b) => {
+              switch (this.sortBy) {
+                case "priceAsc":
+                  return a.price - b.price;
+                case "priceDesc":
+                  return b.price - a.price;
+                case "titleAsc":
+                  return a.title.localeCompare(b.title);
+                case "titleDesc":
+                  return b.title.localeCompare(a.title);
+                case "ratingAsc":
+                  return a.rating - b.rating;
+                case "ratingDesc":
+                  return b.rating - a.rating;
+                default:
+                  return 0;
+              }
+            });
           },
           uniqueCartItems() {
             return [...new Set(this.cart)]; //Set object removes all duplicate values so if a product is selected twice it won't appear twice with all the deets just one line with quantity set as 2
@@ -436,8 +486,9 @@
             return this.sortedProducts.filter((product) => {
               const query = this.searchQuery.toLowerCase();
               return (
-                product.title.toLowerCase().includes(query) ||
-                product.price.toString().includes(query) // Convert price to string to allow text-based matching
+                product.title.toLowerCase().includes(query) || // || = or
+                product.price.toString().includes(query) || // Convert price to string to allow text-based matching since price stored as string
+                product.location.toLowerCase().includes(query)
               );
             });
           },
