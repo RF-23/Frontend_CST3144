@@ -31,7 +31,7 @@
       </header>
       <main>
         <div class="product-grid" v-if="showProduct">
-          <div id="individual-product" v-for="product in sortedProducts">
+          <div id="individual-product" v-for="product in filteredProducts">
             <figure>
               <img v-bind:src="product.image" alt="" />
             </figure>
@@ -83,15 +83,21 @@
           </div>
           <p>
             <strong>Full Name:</strong>
-            <input v-model.trim="order.firstName" />
+            <input
+              v-model.trim="order.fullName"
+              @input="order.fullName = order.fullName.replace(/[^a-zA-Z\s]/g, '')"
+              type="text"
+            />
           </p>
           <p>
             <strong>Phone Number:</strong>
-            <input v-model.trim="order.phone" type="tel" 
-            pattern="[0-9]*" 
-            placeholder="Enter only numbers" 
-            @input="order.phone = order.phone.replace(/[^0-9]/g, '')"
-          />
+            <input
+              v-model.trim="order.phone"
+              type="tel"
+              pattern="[0-9]*"
+              placeholder="Enter only numbers"
+              @input="order.phone = order.phone.replace(/[^0-9]/g, '')"
+            />
           </p>
           <p>
             <strong>Country:</strong>
@@ -103,7 +109,11 @@
           </p>
           <p>
             <strong>City:</strong>
-            <input v-model="order.city" />
+            <input
+              v-model.trim="order.city"
+              type="text"
+              @input="order.city = order.city.replace(/[^a-zA-Z\s]/g, '')"
+            />
           </p>
           <p>
             <strong>Address:</strong>
@@ -132,7 +142,9 @@
           <p>Address: {{order.address}}</p>
           <p>Zip/Postal Code: {{order.zip}}</p>
           <p>Ship as gift: {{order.gift}}</p>
-          <button v-on:click="submitForm">Place Order</button>
+          <button v-on:click="submitForm" :disabled="!FormComplete">
+            Place Order
+          </button>
         </div>
       </main>
     </div>
@@ -144,6 +156,7 @@
           showProduct: true,
           products: products,
           cart: [],
+          searchQuery: "",
           order: {
             fullName: "",
             phone: "",
@@ -408,6 +421,25 @@
           },
           uniqueCartItems() {
             return [...new Set(this.cart)]; //Set object removes all duplicate values so if a product is selected twice it won't appear twice with all the deets just one line with quantity set as 2
+          },
+          FormComplete() {
+            return (
+              this.order.fullName.trim() !== "" &&
+              this.order.phone.trim() !== "" &&
+              this.order.address.trim() !== "" &&
+              this.order.city.trim() !== "" &&
+              this.order.zip !== "" &&
+              this.order.country !== ""
+            );
+          },
+          filteredProducts() {
+            return this.sortedProducts.filter((product) => {
+              const query = this.searchQuery.toLowerCase();
+              return (
+                product.title.toLowerCase().includes(query) ||
+                product.price.toString().includes(query) // Convert price to string to allow text-based matching
+              );
+            });
           },
         },
       });
