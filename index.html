@@ -69,11 +69,6 @@
             <span v-if="lesson.availableInventory === cartCount(lesson.id)"
               >All out!</span
             >
-            <span
-              v-else-if="lesson.availableInventory - cartCount(lesson.id) < 5"
-            >
-              Only {{lesson.availableInventory - cartCount(lesson.id)}} left!
-            </span>
             <span v-else> Buy Now!</span>
             <div id="rating">
               <span v-for="n in lesson.rating">★</span>
