@@ -21,9 +21,12 @@
       <header>
         <!-- Vue directives used here are v-text, v-on and v-if -->
         <!-- v-text binds text context here it is AfterSchoolActivities -->
-        <!-- v-on  -->
+        <!-- v-on directive for event bindings-->
+        <!-- Navbar contains sitename, searchbox and checkout button-->
         <h1 v-text="sitename" v-on:click="showLessons"></h1>
+        <!-- If user is on Lesson Page -->
         <div v-if="showLesson">
+          <!-- Search box -->
           <input
             type="text"
             v-model="searchQuery"
@@ -31,6 +34,7 @@
             class="search-input"
           />
         </div>
+        <!-- Button is only enabled once cart contains atleast one lesson with minimum one inventory  -->
         <button v-on:click="showCheckout" :disabled="cart.length === 0">
           {{cartItemCount}}
           <span class="fa-solid fa-cart-shopping"></span>
@@ -42,50 +46,67 @@
         <div id="sort" v-if="showLesson">
           <label>Sort by:</label>
           <select v-model="sortBy.field">
-            <option value="price">Price</option>
-            <option value="spaces">Spaces Availability</option>
-            <option value="location">Location</option>
-            <option value="title">Title</option>
-            <option value="rating">Rating</option>
+            <!-- fields provided are price, spaces availability, location, title and rating -->
+            <option
+              v-for="field in fields"
+              :key="field.value"
+              :value="field.value"
+            >
+              {{ field.label }}
+            </option>
           </select>
+          <!-- This button toggles the sort order when clicked. -->
+          <!-- If the sort order is "asc" (ascending), it displays "Order: Ascending". -->
+          <!-- Otherwise, it displays "Order: Descending". -->
           <button @click="toggleSortOrder">
             Order: {{ sortBy.order === "asc" ? "Ascending" : "Descending" }}
           </button>
         </div>
         <!-- Lesson Details -->
         <div class="lesson-grid" v-if="showLesson">
+          <!-- Looping through sorted lessons to render each lesson's details -->
           <div
             id="individual-lesson"
             v-for="lesson in sortedLessons"
             :key="lesson.id"
           >
             <figure>
-              <img v-bind:src="lesson.image" alt="" />
+              <!-- Lesson Image displayed -->
+              <img
+                v-bind:src="`https://cst3144-backend-8ctf.onrender.com/${lesson.image}`"
+                alt=""
+              />
             </figure>
+            <!-- Renders lesson title and description using v-text -->
+            <!-- Default interpolation -->
             <h2 v-text="lesson.title"></h2>
             <p v-text="lesson.description"></p>
+            <!-- Declarative rendering through mustache syntax -->
             <p>Price: {{lesson.price}}</p>
             <p>Location: {{lesson.location}}</p>
+            <!-- Based on the quantity of the lesson added to the cart from the front-end dynamically the available inventory count will decrease -->
             <p>
               Available Inventory: {{lesson.availableInventory -
               cartCount(lesson.id)}}
             </p>
+            <!--If available inventory for the specific lesson is more than 0 add to cart button is enabled -->
             <button v-on:click="addToCart(lesson)" v-if="canAddToCart(lesson)">
               Add to Cart
             </button>
             <button disabled="disabled" v-else>Add to cart</button>
-            <!-- Available inventory messages -->
+            <!-- Inventory status messages -->
+            <!-- Displays a message based on the inventory count -->
             <span v-if="lesson.availableInventory === cartCount(lesson.id)"
               >All out!</span
             >
-            <span
-              v-else-if="lesson.availableInventory - cartCount(lesson.id) < 5"
-            >
+            <!-- If inventory is more than 0 -->
+            <span v-else>
               Only {{lesson.availableInventory - cartCount(lesson.id)}} left!
             </span>
-            <span v-else> Buy Now!</span>
-            <!-- Rating -->
+            <!-- Rating System -->
             <div id="rating">
+              <!-- Displays stars based on the lesson's rating -->
+              <!-- Hollow stars fill the remainder up to 5 -->
               <span v-for="n in lesson.rating">★</span>
               <span v-for="n in 5-lesson.rating">☆</span>
             </div>
@@ -106,7 +127,10 @@
             <ul class="cart-item-list">
               <li v-for="lessonId in uniqueCartItems" class="cart-item">
                 <!-- Lesson Image -->
-                <img :src="getLessonImage(lessonId)" alt="Lesson Image" />
+                <img
+                  :src="`https://cst3144-backend-8ctf.onrender.com/${getLessonImage(lessonId)}`"
+                  alt="Lesson Image"
+                />
                 <div class="cart-item-info">
                   <!-- Lesson Title -->
                   <span class="cart-item-title"
@@ -139,19 +163,24 @@
               <strong>Full Name:</strong>
               <input
                 v-model.trim="order.fullName"
-                @input="order.fullName = order.fullName.replace(/[^a-zA-Z\s]/g, '')"
+                @input="validateName"
                 type="text"
               />
+              <span v-if="!nameValid" class="error"
+                >Name must contain only letters.</span
+              >
             </p>
             <!-- Phone Number -->
             <p>
               <strong>Phone Number:</strong>
               <input
                 v-model.trim="order.phone"
+                @input="validatePhone"
                 type="tel"
-                pattern="[0-9]*"
-                @input="order.phone = order.phone.replace(/[^0-9]/g, '')"
               />
+              <span v-if="!phoneValid" class="error"
+                >Phone must contain only numbers.</span
+              >
             </p>
             <!-- Country Dropdown -->
             <p>
@@ -181,7 +210,7 @@
               <strong>Zip/Postal Code:</strong>
               <input v-model.number="order.zip" type="number" />
             </p>
-            <!-- Place Order button enabled only once user has successfully filled the order form -->
+            <!-- Place Order button enabled only once user has successfully filled the order form accurately-->
             <button v-on:click="submitForm" :disabled="!FormComplete">
               Place Order
             </button>
@@ -189,6 +218,7 @@
         </div>
         <!-- Summary of Order Details which from the above div includes cart details-->
         <div v-if="showOrder">
+          <!-- Declarative rendering for displaying the orders array details -->
           <p>Full Name: {{order.fullName}}</p>
           <p>Contact Number: {{order.phone}}</p>
           <p>Country: {{order.country}}</p>
@@ -199,29 +229,42 @@
       </main>
     </div>
     <script>
+      // Vue Instance created by using the mount element app
       var webstore = new Vue({
+        // el is Element and it is referrenced using the div id app
         el: "#app",
         data: {
           sitename: "AfterSchool Activities",
           showLesson: true,
           showOrder: false,
           showOrderForm: true,
+          // OrderPlaced is true only once user has filled the orderForm correctly
           orderPlaced: false,
           lessons: [],
           orders: [],
-          debounceTimeout: null,
+          // search results stored here
           filteredLessons: [],
+          fields: [
+            { value: "price", label: "Price" },
+            { value: "spaces", label: "Spaces Availability" },
+            { value: "location", label: "Location" },
+            { value: "title", label: "Title" },
+            { value: "rating", label: "Rating" },
+          ],
+          // Default sorting is by price in the ascending order
           sortBy: { field: "price", order: "asc" },
+          // All lessons chosen by the
           cart: [],
           cartItemsDetails: [],
           searchQuery: "",
           order: {
-            fullName: "",
-            phone: "",
             address: "",
             city: "",
             zip: "",
           },
+          nameValid: true,
+          phoneValid: true,
+          // List of countries
           countries: [
             "Afghanistan",
             "Albania",
@@ -420,24 +463,32 @@
             "Zimbabwe",
           ],
         },
+        // Created hook
         created() {
-          fetch("http://localhost:3000/AfterSchoolActivities/lessons", {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          })
+          // Fetching all the lessons from the lessons collection in MongoDB
+          fetch(
+            "https://cst3144-backend-8ctf.onrender.com/AfterSchoolActivities/lessons",
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
+            // Using promise-based approach
             .then((response) => {
               if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
               }
               return response.json();
             })
+            // Converting the lesson
             .then((responseJSON) => {
               console.log("Response received:", responseJSON);
               this.lessons = responseJSON;
               this.filteredLessons = responseJSON;
             })
+            // Logging the error
             .catch((error) => {
               console.error("Error:", error);
             });
@@ -497,7 +548,9 @@
               this.filteredLessons = [];
               return;
             }
-            fetch(`/AfterSchoolActivities/search/${query}`)
+            fetch(
+              `https://cst3144-backend-8ctf.onrender.com/AfterSchoolActivities/search/${query}`
+            )
               .then((response) => response.json())
               .then((lessons) => {
                 this.filteredLessons = lessons;
@@ -527,13 +580,16 @@
               zip: this.order.zip,
               cartItems: this.cartItemsDetails,
             };
-            fetch("http://localhost:3000/AfterSchoolActivities/orders", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(orderDetails),
-            })
+            fetch(
+              "https://cst3144-backend-8ctf.onrender.com/AfterSchoolActivities/orders",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(orderDetails),
+              }
+            )
               .then((response) => {
                 if (!response.ok) {
                   throw new Error(`HTTP error! Status: ${response.status}`);
@@ -552,7 +608,7 @@
           updateInventoryAfterOrder(cartItems) {
             cartItems.forEach((item) => {
               fetch(
-                `http://localhost:3000/AfterSchoolActivities/lessons/${item.id}`,
+                `https://cst3144-backend-8ctf.onrender.com/AfterSchoolActivities/lessons/${item.id}`,
                 {
                   method: "PUT",
                   headers: {
@@ -594,6 +650,14 @@
             }
             return count;
           },
+          validateName() {
+            const nameRegex = /^[a-zA-Z\s]+$/; // Letters and spaces only
+            this.nameValid = nameRegex.test(this.order.fullName); // Set validity of fullName
+          },
+          validatePhone() {
+            const phoneRegex = /^[0-9]+$/; // Numbers only
+            this.phoneValid = phoneRegex.test(this.order.phone); // Set validity of phone
+          },
           showCheckout() {
             this.showLesson = this.showLesson ? false : true;
           },
@@ -615,12 +679,9 @@
             return this.cart.length;
           },
           sortedLessons() {
-            // const lessonsToSort = this.filteredLessons.length
-            //   ? this.filteredLessons
-            //   : this.lessons; // Fallback to all lessons if no search results
-            const lessonsToSort =
-              this.filteredLessons.length > 0 ? this.filteredLessons : []; // Show nothing if no search results
-
+            const lessonsToSort = this.filteredLessons.length
+              ? this.filteredLessons
+              : this.lessons;
             const spacesAvailable = (lesson) =>
               lesson.availableInventory - this.cartCount(lesson.id);
 
@@ -643,8 +704,8 @@
           },
           FormComplete() {
             return (
-              this.order.fullName.trim() !== "" &&
-              this.order.phone.trim() !== "" &&
+              this.nameValid && // Full Name is valid
+              this.phoneValid && // Phone is valid
               this.order.address.trim() !== "" &&
               this.order.city.trim() !== "" &&
               this.order.zip !== "" &&
