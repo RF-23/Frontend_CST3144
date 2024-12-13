@@ -5,11 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- Title of the webpage that appears in the browser tab -->
     <title>AfterSchool Activities</title>
-    <link
-      rel="icon"
-      href="https://cst3144-backend-8ctf.onrender.com/images/Website_Logo.png"
-      type="image/png"
-    />
     <!-- CDN link for Vue.js (no need to install Vue CLI) -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
     <link rel="stylesheet" href="style.css" />
@@ -469,13 +464,13 @@
         },
         // Created hook
         created() {
-          // Fetching all the lessons from the lessons collection in MongoDB
+          // Fetch all lessons from the MongoDB collection using the backend API
           fetch(
             "https://cst3144-backend-8ctf.onrender.com/AfterSchoolActivities/lessons",
             {
               method: "GET",
               headers: {
-                "Content-Type": "application/json",
+                "Content-Type": "application/json", // Specify JSON format for the request
               },
             }
           )
@@ -484,9 +479,10 @@
               if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
               }
+              // Parse the JSON data from the response body
               return response.json();
             })
-            // Converting the lesson
+            // Storing the response in the lessons and FilteredLessons array
             .then((responseJSON) => {
               console.log("Response received:", responseJSON);
               this.lessons = responseJSON;
@@ -497,18 +493,21 @@
               console.error("Error:", error);
             });
         },
+        // Lifecycle hook that is called after the Vue instance is mounted to the DOM
         mounted() {
           if (this.cartIsEmpty) {
             this.showLessons();
           }
         },
         watch: {
+          // Every keystroke is watched and triggers the fetchFilteredLessons method
           searchQuery(newQuery) {
             this.fetchFilteredLessons(newQuery);
           },
         },
         methods: {
           showLessons() {
+            // Lessons shown by default
             this.showLesson = true;
           },
           addToCart(lesson) {
@@ -516,10 +515,11 @@
             const existingLesson = this.cartItemsDetails.find(
               (item) => item.id === lesson.id
             );
-
+            // If user is adding the same lesson again increase the count by 1
             if (existingLesson) {
               existingLesson.quantity++;
             } else {
+              // If user is adding a lesson only once then add the lesson.id details into the cart
               this.cartItemsDetails.push({
                 id: lesson.id,
                 title: lesson.title,
@@ -529,6 +529,7 @@
               });
             }
           },
+          // Checks if user can add lesson to cart if available inventory is atleast 1 
           canAddToCart(lesson) {
             return lesson.availableInventory > this.cartCount(lesson.id);
           },
@@ -541,17 +542,21 @@
               this.showLesson = true;
             }
           },
+          // Turnary operator 
           toggleSortOrder() {
+            // Gets the current value of this.sortBy.order and then switches to the other order
             this.sortBy.order = this.sortBy.order === "asc" ? "desc" : "asc";
           },
           lessonsPage() {
             this.showLesson = this.showLesson ? false : true;
           },
           fetchFilteredLessons(query) {
+            // If `query` is empty, it clears the `filteredLessons` array and exits early
             if (!query) {
               this.filteredLessons = [];
               return;
             }
+            // Updates `filteredLessons` with the fetched lessons using backtick
             fetch(
               `https://cst3144-backend-8ctf.onrender.com/AfterSchoolActivities/search/${query}`
             )
@@ -584,6 +589,7 @@
               zip: this.order.zip,
               cartItems: this.cartItemsDetails,
             };
+            // Posting the order details the orders collection using the Backend API
             fetch(
               "https://cst3144-backend-8ctf.onrender.com/AfterSchoolActivities/orders",
               {
@@ -682,10 +688,13 @@
           cartItemCount: function () {
             return this.cart.length;
           },
+          // Determine which list of lessons to sort: filtered lessons (if any) or all lessons
           sortedLessons() {
             const lessonsToSort = this.filteredLessons.length
               ? this.filteredLessons
               : this.lessons;
+            
+            // To calculate the remaining spaces available for a lesson
             const spacesAvailable = (lesson) =>
               lesson.availableInventory - this.cartCount(lesson.id);
 
@@ -696,10 +705,12 @@
               title: (a, b) => a.title.localeCompare(b.title),
               rating: (a, b) => a.rating - b.rating,
             };
-
+            // Get the sorting function based on the field to sort by (default is price)
             const sortFn = sortingFunctions[this.sortBy.field];
+            // Creates a sorted copy of the lessons using the chosen sorting function
             const sorted = [...lessonsToSort].sort(sortFn);
 
+            // Return the sorted array in ascending(default) or descending order based on the `order` field
             return this.sortBy.order === "asc" ? sorted : sorted.reverse();
           },
 
