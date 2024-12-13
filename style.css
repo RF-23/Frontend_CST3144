@@ -1,4 +1,3 @@
-/* General Styling */
 body {
     font-family: 'Roboto', sans-serif;
     margin: 0;
@@ -16,6 +15,7 @@ header {
     position:relative;
     width: 99.2%;
     top: 0;
+    /* Ensures the element is on top of others in the stacking order */
     z-index: 1000;
     display: flex;
 }
@@ -32,11 +32,12 @@ header input.search-input {
     border-radius: 5px;
     background-color: #f9c85f;
     border: 2px solid #e2b35c;
+    /* 1em = 16px */
     font-size: 1em;
     margin-top: 7%;
     margin-inline-start: 313%;
 }
-
+/* Checkout Button */
 header button {
     position: absolute;
     right: 20px;
@@ -49,6 +50,8 @@ main {
     margin-left: 8%;
     padding: 100px 20px 20px;
 }
+
+/* All Lesson details */
 .lesson-grid {
     display: flex;
     flex-wrap: wrap;
@@ -73,24 +76,20 @@ main {
 }
 
 .lesson-card {
-    /* flex: 1 1 calc(33.33% - 20px); */
     background-color: #dbc954;
-    /* border: 1.8px solid #000;
-    border-style: solid; */
-    /* border-radius: 8px; */
-    /* padding: 20px; */
-    /* text-align: center; */
 }
 
 .lesson_img{
     background-color: #333;
 
 }
+
 img {
     height: 200px;
     width: 107%;
     object-fit: cover;
     border: 1.5px solid #ab9951;
+    /* border-radius makes the corner smoother */
     border-radius: 8px;
     margin-left: -3%;
 }
@@ -118,9 +117,11 @@ button {
     cursor: pointer;
     margin-left: 5%;
     border-radius: 18px;
+    /* Transition styling */
     transition: background-color 0.3s ease;
 }
 
+/* Default styling for hover */
 button:hover {
     background-color: #dfa12c;
 }
@@ -136,7 +137,6 @@ button.add-to-cart {
     margin-top: 10px;
     font-size: 1.1em;
 }
-
 
 #rating{
     margin-left: 5%;
@@ -247,7 +247,7 @@ button.add-to-cart {
     color: #333;
   }
   
-  /* Try to override default highlight */
+
   #sort select option:hover {
     background-color: #dfd48e;
     color: #333;

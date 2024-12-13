@@ -15,7 +15,7 @@
     ></script>
   </head>
   <body>
-    <!-- Root element div -->
+    <!-- Root element div where the Vue instance will mount on in the el hook -->
     <div id="app">
       <header>
         <!-- Vue directives used here are v-text, v-on and v-if -->
@@ -46,11 +46,13 @@
           <label>Sort by:</label>
           <select v-model="sortBy.field">
             <!-- fields provided are price, spaces availability, location, title and rating -->
+            <!-- v-for used to loop between the fields using the key as index  -->
             <option
               v-for="field in fields"
               :key="field.value"
               :value="field.value"
             >
+            <!-- Declarative rendering to show the selected field label -->
               {{ field.label }}
             </option>
           </select>
@@ -71,9 +73,10 @@
           >
             <figure>
               <!-- Lesson Image displayed -->
+               <!-- v-bind to dynamically load the lesson image from the backend API -->
               <img
                 v-bind:src="`https://cst3144-backend-8ctf.onrender.com/${lesson.image}`"
-                alt=""
+                alt="Lesson Image"
               />
             </figure>
             <!-- Renders lesson title and description using v-text -->
@@ -160,11 +163,14 @@
             <!-- Name -->
             <p>
               <strong>Full Name:</strong>
+              <!-- v-on shortform is @ -->
+               <!-- Validating name using the validateName function -->
               <input
                 v-model.trim="order.fullName"
                 @input="validateName"
                 type="text"
               />
+              <!-- Below error message displayed if user doesn't enter letters -->
               <span v-if="!nameValid" class="error"
                 >Name must contain only letters.</span
               >
@@ -172,11 +178,13 @@
             <!-- Phone Number -->
             <p>
               <strong>Phone Number:</strong>
+              <!-- Validation method validatePhone is in the methods hook of the Vue instance-->
               <input
                 v-model.trim="order.phone"
                 @input="validatePhone"
                 type="tel"
               />
+              <!-- Below error message displayed if user doesn't enter numbers -->
               <span v-if="!phoneValid" class="error"
                 >Phone must contain only numbers.</span
               >
@@ -184,6 +192,7 @@
             <!-- Country Dropdown -->
             <p>
               <strong>Country:</strong>
+              <!-- Dropdown for selecting a country, with two-way binding and dynamically populated options -->
               <select v-model="order.country" class="form-control">
                 <option v-for="country in countries" v-bind:value="country">
                   {{country}}
@@ -193,6 +202,7 @@
             <!-- City -->
             <p>
               <strong>City:</strong>
+              <!-- @input here ensures user cant enter numbers -->
               <input
                 v-model.trim="order.city"
                 type="text"
@@ -252,7 +262,7 @@
           ],
           // Default sorting is by price in the ascending order
           sortBy: { field: "price", order: "asc" },
-          // All lessons chosen by the
+          // All lessons chosen by the user
           cart: [],
           cartItemsDetails: [],
           searchQuery: "",
@@ -462,7 +472,7 @@
             "Zimbabwe",
           ],
         },
-        // Created hook
+        // Created hook runs when the component instance is created
         created() {
           // Fetch all lessons from the MongoDB collection using the backend API
           fetch(
@@ -482,7 +492,7 @@
               // Parse the JSON data from the response body
               return response.json();
             })
-            // Storing the response in the lessons and FilteredLessons array
+            // Storing the response in the lessons and FilteredLessons array for search results to later by filtered from this order
             .then((responseJSON) => {
               console.log("Response received:", responseJSON);
               this.lessons = responseJSON;
@@ -529,10 +539,11 @@
               });
             }
           },
-          // Checks if user can add lesson to cart if available inventory is atleast 1 
+          // Checks if user can add lesson to cart if available inventory is atleast 1
           canAddToCart(lesson) {
             return lesson.availableInventory > this.cartCount(lesson.id);
           },
+          // Removes item from cart 
           removeFromCart(lessonId) {
             const index = this.cart.lastIndexOf(lessonId);
             if (index > -1) {
@@ -542,7 +553,7 @@
               this.showLesson = true;
             }
           },
-          // Turnary operator 
+          // Turnary operator
           toggleSortOrder() {
             // Gets the current value of this.sortBy.order and then switches to the other order
             this.sortBy.order = this.sortBy.order === "asc" ? "desc" : "asc";
@@ -556,12 +567,13 @@
               this.filteredLessons = [];
               return;
             }
-            // Updates `filteredLessons` with the fetched lessons using backtick
+            // Updates `filteredLessons`(backtick) with the fetched lessons using Backend API
             fetch(
               `https://cst3144-backend-8ctf.onrender.com/AfterSchoolActivities/search/${query}`
             )
               .then((response) => response.json())
               .then((lessons) => {
+                // filteredLessons property is being set to the value of the lessons array based on the response
                 this.filteredLessons = lessons;
                 // Log message if no results are found
                 if (lessons.length === 0) {
@@ -574,6 +586,7 @@
               });
           },
           submitForm() {
+            // Hides all pages only order confirmation is shown 
             {
               this.showLesson = false;
               this.showOrder = true;
@@ -609,12 +622,14 @@
               .then((responseJSON) => {
                 console.log("Order saved successfully:", responseJSON);
                 this.orderPlaced = true;
+                // updating the inventory of the cart items in the lessons collection based on the inventory in the cart
                 this.updateInventoryAfterOrder(this.cartItemsDetails);
               })
               .catch((error) => {
                 console.error("Error saving order:", error);
               });
           },
+          // Updates the inventory for each item in the cart by sending a PUT request to the backend
           updateInventoryAfterOrder(cartItems) {
             cartItems.forEach((item) => {
               fetch(
@@ -651,6 +666,7 @@
                 });
             });
           },
+          // Counts the occurrences of the item with the specified id in the cart array
           cartCount(id) {
             let count = 0;
             for (let i = 0; i < this.cart.length; i++) {
@@ -668,9 +684,12 @@
             const phoneRegex = /^[0-9]+$/; // Numbers only
             this.phoneValid = phoneRegex.test(this.order.phone); // Set validity of phone
           },
+          // Toggles the visibility of the lesson page
           showCheckout() {
             this.showLesson = this.showLesson ? false : true;
           },
+          // Below 3 methods are to show the cart lesson details
+          // Retrieves the title, price and image of the lesson based on the lessonId
           getLessonTitle(lessonId) {
             const lesson = this.lessons.find((p) => p.id === lessonId);
             return lesson ? lesson.title : "Not a Lesson";
@@ -684,16 +703,17 @@
             return lesson ? lesson.image : "Lesson Image";
           },
         },
+        // Computed properties are reactive and cached, only recalculated when their dependencies change
         computed: {
           cartItemCount: function () {
             return this.cart.length;
           },
-          // Determine which list of lessons to sort: filtered lessons (if any) or all lessons
+          // Determine which list of lessons to sort: filtered lessons (if any?) or: all lessons
           sortedLessons() {
             const lessonsToSort = this.filteredLessons.length
               ? this.filteredLessons
               : this.lessons;
-            
+
             // To calculate the remaining spaces available for a lesson
             const spacesAvailable = (lesson) =>
               lesson.availableInventory - this.cartCount(lesson.id);
@@ -715,9 +735,11 @@
           },
 
           uniqueCartItems() {
-            return [...new Set(this.cart)]; //Set object removes all duplicate values so if a lesson is selected twice it won't appear twice with all the deets just one line with quantity set as 2
+            // Set object removes duplicates, ensuring each lesson appears only once with updated quantity
+            return [...new Set(this.cart)]; 
           },
           FormComplete() {
+            // returns true if all the order details are accurately filled and not empty
             return (
               this.nameValid && // Full Name is valid
               this.phoneValid && // Phone is valid
